@@ -90,6 +90,18 @@ update` first. Operational or governance work with **no honest spec delta**
 (e.g. PyPI releases, flipping a SEP's status) does **not** belong in OpenSpec —
 track it in `REQUIREMENTS.md` § Pending instead.
 
+## Definition of done
+
+A change is ready for review when these checks have *run* and passed —
+"should pass" is not done:
+
+- CI is green on the PR.
+- Non-trivial: `openspec validate <name> --strict` is clean, every box in
+  `tasks.md` is ticked, and each new requirement has a test, a checker or a
+  named human judge (its `REQUIREMENTS.md` row lands with the archive, step 6).
+- A sibling's public names changed: the three sibling checkers above pass
+  against that sibling.
+
 ## Conventions & virtues
 
 - **Single source of truth, no duplication.** Every fact has one home; other
