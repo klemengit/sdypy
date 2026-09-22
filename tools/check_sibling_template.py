@@ -210,9 +210,21 @@ def check_test_workflow(workflows_dir, violations):
             "%s: python matrix %s does not cover the supported set %s"
             % (label, sorted(matrix), sorted(SUPPORTED_PYTHON))
         )
-    if not re.search(r"pip install \.(?!\[)", text):
-        violations.append("%s: package must be installed via 'pip install .'" % label)
-    if "requirements" in text:
+    # Accept 'pip install .' and 'pip install .[extra1,extra2]', quoted with
+    # single quotes, double quotes, or no quotes at all. Written as three
+    # alternatives rather than one pattern with a backreference to an optional
+    # quote group: when that group matches zero characters it does not
+    # "participate", and Python's re then refuses to match its backreference
+    # at all - even against an empty string.
+    _dot_extras = r"\.(?:\[[^\]]*\])?"
+    if not re.search(
+        r'pip install (?:%s|"%s"|\'%s\')' % (_dot_extras, _dot_extras, _dot_extras), text
+    ):
+        violations.append(
+            "%s: package must be installed via 'pip install .' or "
+            "'pip install .[<extras>]'" % label
+        )
+    if re.search(r"requirements[\w.-]*\.txt", text):
         violations.append("%s: references a requirements file" % label)
     for needle, what in (("flake8", "flake8 step"), ("pytest", "pytest step"),
                          ("python -m build", "build validation step")):

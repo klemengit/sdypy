@@ -260,6 +260,27 @@ def write_workflow(tmp_path, install, matrix=None):
     return workflows_dir
 
 
+@pytest.mark.parametrize("install", [
+    "pip install .",
+    "pip install .[dev]",
+    'pip install ".[dev]"',
+    "pip install '.[dev]'",
+    'pip install ".[dev,docs]"',
+])
+def test_pip_install_with_extras_is_accepted(tmp_path, install):
+    workflows_dir = write_workflow(tmp_path, install)
+    violations = []
+    check_test_workflow(workflows_dir, violations)
+    assert not any("must be installed via" in v for v in violations)
+
+
+def test_requirements_txt_is_still_rejected(tmp_path):
+    workflows_dir = write_workflow(tmp_path, "pip install -r requirements.txt")
+    violations = []
+    check_test_workflow(workflows_dir, violations)
+    assert any("references a requirements file" in v for v in violations)
+
+
 def test_matrix_not_covering_the_supported_set_is_reported(tmp_path):
     workflows_dir = write_workflow(tmp_path, "pip install .", matrix=["3.11", "3.12"])
     violations = []
