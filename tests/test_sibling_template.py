@@ -24,11 +24,15 @@ sys.path.insert(0, str(REPO_ROOT / "tools"))
 from check_sibling_template import (  # noqa: E402
     AGENTS_LINKS_END,
     AGENTS_LINKS_START,
+    PYTHON_FLOOR,
     SHARED_RULES_END,
     SHARED_RULES_START,
+    SUPPORTED_PYTHON,
     check_agents_md,
     check_claude_md,
     check_openspec_config,
+    check_pyproject,
+    check_test_workflow,
     extract_marker_block,
 )
 
@@ -209,3 +213,134 @@ def test_a_shim_stays_exempt_even_when_the_hub_rules_block_is_broken(tmp_path):
     violations = []
     check_openspec_config(tmp_path, "FRF", None, violations)
     assert violations == []
+
+
+# --------------------------------------------------------------------------
+# Canonical test workflow on the supported Python set
+# --------------------------------------------------------------------------
+
+BASE_WORKFLOW = """\
+name: Python package
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: %(matrix)s
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install
+        run: |
+          %(install)s
+      - name: Lint
+        run: flake8 .
+      - name: Test
+        run: pytest
+      - name: Build
+        run: python -m build
+"""
+
+
+def write_workflow(tmp_path, install, matrix=None):
+    """Write a minimal python-package.yml varying only install and matrix."""
+    versions = matrix if matrix is not None else sorted(SUPPORTED_PYTHON)
+    matrix_literal = "[" + ", ".join('"%s"' % v for v in versions) + "]"
+    text = BASE_WORKFLOW % {"install": install, "matrix": matrix_literal}
+    workflows_dir = tmp_path / ".github" / "workflows"
+    write(workflows_dir, "python-package.yml", text)
+    return workflows_dir
+
+
+def test_matrix_not_covering_the_supported_set_is_reported(tmp_path):
+    workflows_dir = write_workflow(tmp_path, "pip install .", matrix=["3.11", "3.12"])
+    violations = []
+    check_test_workflow(workflows_dir, violations)
+    assert any("does not cover the supported set" in v for v in violations)
+
+
+def test_matrix_covering_the_supported_set_passes(tmp_path):
+    workflows_dir = write_workflow(tmp_path, "pip install .")
+    violations = []
+    check_test_workflow(workflows_dir, violations)
+    assert not any("does not cover" in v for v in violations)
+
+
+# --------------------------------------------------------------------------
+# Metadata consistency with the supported Python set
+# --------------------------------------------------------------------------
+
+CONFORMING_PYPROJECT = """\
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "sdypy-EMA"
+version = "1.0.0"
+requires-python = "%(floor)s"
+license = {text = "MIT"}
+readme = {file = "README.rst"}
+classifiers = [
+%(classifiers)s
+    "License :: OSI Approved :: MIT License",
+    "Development Status :: 4 - Beta",
+]
+
+[project.urls]
+Homepage = "https://github.com/ladisk/sdypy-EMA"
+Source = "https://github.com/ladisk/sdypy-EMA"
+
+[project.optional-dependencies]
+docs = ["sphinx"]
+dev = ["pytest", "sdypy-EMA[docs]"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["sdypy"]
+
+[tool.hatch.build.targets.sdist]
+include = ["sdypy"]
+"""
+
+
+def write_pyproject(tmp_path, floor=None, classifiers=None):
+    """Write a conforming pyproject.toml, varying only floor and classifiers."""
+    (tmp_path / "README.rst").write_text("readme\n", encoding="utf-8")
+    versions = classifiers if classifiers is not None else sorted(SUPPORTED_PYTHON)
+    classifiers_block = "\n".join(
+        '    "Programming Language :: Python :: %s",' % v for v in versions
+    )
+    text = CONFORMING_PYPROJECT % {
+        "floor": floor or (">=%s" % PYTHON_FLOOR),
+        "classifiers": classifiers_block,
+    }
+    write(tmp_path, "pyproject.toml", text)
+
+
+def test_requires_python_floor_is_the_oldest_supported_version(tmp_path):
+    write_pyproject(tmp_path)
+    violations = []
+    check_pyproject(tmp_path, "EMA", violations)
+    assert violations == []
+
+
+def test_wrong_requires_python_floor_is_reported(tmp_path):
+    write_pyproject(tmp_path, floor=">=3.10")
+    violations = []
+    check_pyproject(tmp_path, "EMA", violations)
+    assert any("requires-python" in v for v in violations)
+
+
+def test_classifiers_not_matching_the_supported_set_are_reported(tmp_path):
+    write_pyproject(tmp_path, classifiers=["3.10", "3.11", "3.12"])
+    violations = []
+    check_pyproject(tmp_path, "EMA", violations)
+    assert any("do not match the supported set" in v for v in violations)

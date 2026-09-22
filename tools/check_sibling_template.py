@@ -3,8 +3,9 @@
 Audits a first-level sdypy namespace package working clone against the
 template contract (openspec/specs/sibling-package-template/spec.md):
 root-file hygiene, pyproject shape, workflow files, the __init__.py
-version-derivation pattern, and the agent on-ramp files (AGENTS.md, CLAUDE.md,
-openspec/config.yaml) copying the hub's shared blocks verbatim.
+version-derivation pattern, the agent on-ramp files (AGENTS.md, CLAUDE.md,
+openspec/config.yaml) copying the hub's shared blocks verbatim, and the
+supported Python set (SPEC 0).
 
 Usage:
     python tools/check_sibling_template.py --path <sibling-clone-dir>
@@ -18,7 +19,16 @@ import sys
 import tomllib
 from pathlib import Path
 
-CI_MATRIX = {"3.10", "3.11", "3.12"}
+# The supported Python set follows Scientific Python's SPEC 0
+# (https://scientific-python.org/specs/spec-0000/): every stable minor version
+# released less than three years ago. This is the set's one declaration (every
+# other requirement refers to it); the hub maintainer keeps it current at each
+# SPEC 0 quarterly drop or new CPython minor release - it is hand-maintained on
+# purpose, not derived from today's date, so the checker's verdict does not
+# change with the calendar (design.md Decision 4).
+SUPPORTED_PYTHON = {"3.12", "3.13", "3.14"}
+PYTHON_FLOOR = min(SUPPORTED_PYTHON, key=lambda v: tuple(int(p) for p in v.split(".")))
+
 FORBIDDEN_ROOT_FILES = (
     "setup.py",
     "setup.cfg",
@@ -100,8 +110,12 @@ def check_pyproject(root, pkg, violations):
     elif not re.fullmatch(r"\d+\.\d+\.\d+", str(project.get("version", ""))):
         violations.append("pyproject: [project] version is %r, expected a literal X.Y.Z" % project.get("version"))
 
-    if project.get("requires-python") != ">=3.10":
-        violations.append("pyproject: requires-python is %r, expected '>=3.10'" % project.get("requires-python"))
+    expected_floor = ">=%s" % PYTHON_FLOOR
+    if project.get("requires-python") != expected_floor:
+        violations.append(
+            "pyproject: requires-python is %r, expected %r"
+            % (project.get("requires-python"), expected_floor)
+        )
 
     lic = project.get("license")
     lic_text = lic.get("text") if isinstance(lic, dict) else lic
@@ -115,10 +129,10 @@ def check_pyproject(root, pkg, violations):
         for m in [re.fullmatch(r"Programming Language :: Python :: (3\.\d+)", c)]
         if m
     }
-    if declared != CI_MATRIX:
+    if declared != SUPPORTED_PYTHON:
         violations.append(
-            "pyproject: Python classifiers %s do not match the CI matrix %s"
-            % (sorted(declared), sorted(CI_MATRIX))
+            "pyproject: Python classifiers %s do not match the supported set %s"
+            % (sorted(declared), sorted(SUPPORTED_PYTHON))
         )
     if "License :: OSI Approved :: MIT License" not in classifiers:
         violations.append("pyproject: missing 'License :: OSI Approved :: MIT License' classifier")
@@ -191,8 +205,11 @@ def check_test_workflow(workflows_dir, violations):
     if "pull_request" not in text:
         violations.append("%s: no pull_request trigger" % label)
     matrix = set(re.findall(r"['\"](3\.\d+)['\"]", text))
-    if not CI_MATRIX <= matrix:
-        violations.append("%s: python matrix %s does not cover %s" % (label, sorted(matrix), sorted(CI_MATRIX)))
+    if not SUPPORTED_PYTHON <= matrix:
+        violations.append(
+            "%s: python matrix %s does not cover the supported set %s"
+            % (label, sorted(matrix), sorted(SUPPORTED_PYTHON))
+        )
     if not re.search(r"pip install \.(?!\[)", text):
         violations.append("%s: package must be installed via 'pip install .'" % label)
     if "requirements" in text:
