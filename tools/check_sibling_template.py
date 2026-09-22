@@ -2,8 +2,9 @@
 
 Audits a first-level sdypy namespace package working clone against the
 template contract (openspec/specs/sibling-package-template/spec.md):
-root-file hygiene, pyproject shape, workflow files, and the __init__.py
-version-derivation pattern.
+root-file hygiene, pyproject shape, workflow files, the __init__.py
+version-derivation pattern, and the agent on-ramp files (AGENTS.md, CLAUDE.md,
+openspec/config.yaml) copying the hub's shared blocks verbatim.
 
 Usage:
     python tools/check_sibling_template.py --path <sibling-clone-dir>
@@ -27,6 +28,26 @@ FORBIDDEN_ROOT_FILES = (
 TEST_WORKFLOW = "python-package.yml"
 RELEASE_WORKFLOW = "release-and-publish-to-pypi.yml"
 MIN_ACTION_MAJORS = {"actions/checkout": 4, "actions/setup-python": 5}
+
+# Marker comments delimiting the hub's shared blocks (design.md Decision 1).
+# Matched as a substring of their line, not the whole line, since the
+# config.yaml marker carries a trailing note the checker does not care about.
+AGENTS_LINKS_START = "<!-- >>> sdypy hub links -->"
+AGENTS_LINKS_END = "<!-- <<< sdypy hub links -->"
+SHARED_RULES_START = "# >>> shared rules from the sdypy hub"
+SHARED_RULES_END = "# <<< shared rules"
+
+# Backend shims are exempt from carrying openspec/config.yaml (*A shim is not
+# required to carry OpenSpec configuration*). Mirrors the portion names
+# tools/check_public_api.py already uses for its own shim handling
+# (SHIM_BACKENDS keys); kept as a local constant so the two checkers do not
+# import each other.
+SHIM_PACKAGES = {"FRF", "excitation"}
+
+# The hub's own root, resolved from this file's location - never from the
+# working directory, so the checker gives the same verdict regardless of where
+# it is invoked from (spec: *Read the hub's files relative to the checker*).
+HUB_ROOT = Path(__file__).resolve().parents[1]
 
 
 def find_package_name(root):
@@ -219,6 +240,103 @@ def check_init_version(root, pkg, violations):
         violations.append("%s: hard-coded __version__ literal present" % label)
 
 
+def extract_marker_block(text, start_marker, end_marker):
+    """Return a marker-delimited region of `text`, markers included.
+
+    Both markers are matched as a substring of the line they appear on - the
+    shared-rules marker in `openspec/config.yaml` carries a trailing note
+    ("... - edit them there") that this comparison ignores. The returned block
+    runs from the start of the start marker's line to the end of the end
+    marker's line, with line endings normalised to ``\\n``.
+
+    Returns ``None`` when either marker is absent, or the end marker precedes
+    the start marker.
+    """
+    normalised = text.replace("\r\n", "\n").replace("\r", "\n")
+    start_pos = normalised.find(start_marker)
+    end_pos = normalised.find(end_marker)
+    if start_pos == -1 or end_pos == -1 or end_pos < start_pos:
+        return None
+    block_start = normalised.rfind("\n", 0, start_pos) + 1
+    line_end = normalised.find("\n", end_pos)
+    block_end = len(normalised) if line_end == -1 else line_end
+    return normalised[block_start:block_end]
+
+
+def _hub_block(relative_path, start_marker, end_marker):
+    """Extract a shared block from a hub file, resolved from this file."""
+    path = HUB_ROOT / relative_path
+    if not path.is_file():
+        return None
+    return extract_marker_block(path.read_text(encoding="utf-8"), start_marker, end_marker)
+
+
+def check_agents_md(root, hub_block, violations):
+    """*Agent instructions link to the hub's org-wide rules.*
+
+    A `hub_block` of `None` means the hub's own `AGENTS.md` has no valid
+    marker-delimited block - a hub-side regression, not a sibling problem -
+    and is reported rather than silently letting every sibling pass.
+    """
+    if hub_block is None:
+        violations.append(
+            "on-ramp: hub AGENTS.md link block not found - cannot compare "
+            "against it (the hub itself has no valid marker-delimited block)"
+        )
+        return
+    path = root / "AGENTS.md"
+    if not path.is_file():
+        violations.append("on-ramp: AGENTS.md missing")
+        return
+    text = path.read_text(encoding="utf-8")
+    block = extract_marker_block(text, AGENTS_LINKS_START, AGENTS_LINKS_END)
+    if block is None:
+        violations.append("on-ramp: AGENTS.md has no hub link block")
+    elif block != hub_block:
+        violations.append("on-ramp: AGENTS.md link block does not match the hub's")
+
+
+def check_claude_md(root, violations):
+    """*Claude Code reads AGENTS.md.*"""
+    path = root / "CLAUDE.md"
+    if not path.is_file():
+        violations.append("on-ramp: CLAUDE.md missing")
+        return
+    text = path.read_text(encoding="utf-8")
+    if text not in ("@AGENTS.md", "@AGENTS.md\n"):
+        violations.append("on-ramp: CLAUDE.md must contain exactly '@AGENTS.md'")
+
+
+def check_openspec_config(root, pkg, hub_block, violations):
+    """*OpenSpec configuration carries the hub's shared rules*, non-shims only.
+
+    A `hub_block` of `None` means the hub's own `openspec/config.yaml` has no
+    valid marker-delimited block - a hub-side regression, not a sibling
+    problem - and is reported rather than silently letting every non-shim
+    sibling pass. Checked after the shim exemption: a shim needs no
+    `openspec/` regardless of whether the hub's block is intact.
+    """
+    if pkg in SHIM_PACKAGES:
+        return
+    if hub_block is None:
+        violations.append(
+            "on-ramp: hub openspec/config.yaml shared rules block not found - "
+            "cannot compare against it (the hub itself has no valid "
+            "marker-delimited block)"
+        )
+        return
+    path = root / "openspec" / "config.yaml"
+    if not path.is_file():
+        violations.append("on-ramp: openspec/config.yaml missing")
+        return
+    text = path.read_text(encoding="utf-8")
+    block = extract_marker_block(text, SHARED_RULES_START, SHARED_RULES_END)
+    if block is None:
+        violations.append("on-ramp: openspec/config.yaml has no shared rules block")
+    elif block != hub_block:
+        violations.append("on-ramp: openspec/config.yaml shared rules do not match the hub's")
+
+
 def check_scaffolding(root, violations):
     if not any(f.is_file() and f.name.upper().startswith("LICENSE")
                for f in root.iterdir()):
@@ -262,6 +380,12 @@ def main(argv=None):
     check_release_workflow(workflows_dir, violations)
     check_init_version(root, pkg, violations)
     check_scaffolding(root, violations)
+
+    hub_agents_block = _hub_block("AGENTS.md", AGENTS_LINKS_START, AGENTS_LINKS_END)
+    hub_rules_block = _hub_block("openspec/config.yaml", SHARED_RULES_START, SHARED_RULES_END)
+    check_agents_md(root, hub_agents_block, violations)
+    check_claude_md(root, violations)
+    check_openspec_config(root, pkg, hub_rules_block, violations)
 
     name = "sdypy-%s" % pkg
     if violations:
