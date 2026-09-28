@@ -42,5 +42,5 @@
 ## 6. Close out
 
 - [ ] 6.1 Cross-package check: in a fresh `uv venv` with all merged branches installed, run the hub `pytest -m "not pypi_artifacts" -W error::DeprecationWarning`. Verify: green, or every failure traced to a third-party warning
-- [ ] 6.2 Close or rebase PR #6 as its author decides (design D7)
+- [x] 6.2 PR #6 merged on 2026-09-28; its note is replaced by the `frf_estimator` note in the merge commit
 - [ ] 6.3 After the last package PR merges, run `openspec archive canonicalize-frf-estimator` as the final hub commit, carrying the REQUIREMENTS.md update. Verify: `openspec validate --all --strict` passes
