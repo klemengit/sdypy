@@ -39,5 +39,5 @@
 
 ## 7. Review and archive
 
-- [ ] 7.1 Commit the change artifacts first, the implementation after, and open one PR on `ladisk/sdypy`
+- [x] 7.1 Commit the change artifacts first, the implementation after, and open one PR on `ladisk/sdypy`
 - [ ] 7.2 After review converges: `openspec archive add-sibling-onramp`, with the `REQUIREMENTS.md` rows for the new requirements in the same commit — the SPEC 0 set as `manual` (hub maintainer, at each SPEC 0 quarterly drop), the rest as `check_sibling_template.py` / `check_nomenclature.py` with their tests
