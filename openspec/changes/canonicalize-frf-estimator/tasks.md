@@ -22,21 +22,21 @@
 
 ## 3. sdypy-FRF (ladisk/sdypy-FRF)
 
-- [ ] 3.1 Set `pyFRF >= 1.5` in `pyproject.toml` and version 0.3.0. Verify: `python ../../sdypy/tools/check_sibling_template.py --path .` exits 0
-- [ ] 3.2 Update `README.rst` and `tests/test_frf.py` to `frf_estimator=` and `frf_form=`. Verify: `pytest -W error::DeprecationWarning` passes against pyFRF 1.5.0
+- [x] 3.1 Set `pyFRF >= 1.5` in `pyproject.toml` and version 0.3.0. Verify: `python ../../sdypy/tools/check_sibling_template.py --path .` exits 0
+- [x] 3.2 Update `README.rst` and `tests/test_frf.py` to `frf_estimator=` and `frf_form=`. Verify: `pytest -W error::DeprecationWarning` passes against pyFRF 1.5.0
 - [ ] 3.3 Open the PR linking the hub PR, after pyFRF 1.5.0 is on PyPI. Verify: CI green
 
 ## 4. sdypy-EMA (ladisk/sdypy-EMA)
 
-- [ ] 4.1 Change `Model.add_frf()` from `get_FRF(form='receptance')` to `get_FRF('default', 'receptance')`, and add a test for `add_frf` with a small pyFRF object (none exists today). Verify: the test passes with pyFRF 1.4.0 and with 1.5.0 under `-W error::DeprecationWarning`
-- [ ] 4.2 Rename the `frf_type` parameter of the public `LSFD`, `LSFD_proportional` and `LSFD_old` functions to `frf_form` in the same position, with a keyword-only deprecated `frf_type` (design D4). Verify: tests that the old keyword warns and gives the same result, and that positional calls do not warn
-- [ ] 4.3 Update `docs/source/tutorial.rst` to `frf_form=` and add the missing changelog entries (0.28 to 0.31), including the `frf_type` → `frf_form` renames. Verify: `grep -rn frf_type docs/source` finds only changelog lines; the docs build
+- [x] 4.1 Change `Model.add_frf()` from `get_FRF(form='receptance')` to `get_FRF('default', 'receptance')`, and add a test for `add_frf` with a small pyFRF object (none exists today). Verify: the test passes with pyFRF 1.4.0 and with 1.5.0 under `-W error::DeprecationWarning`
+- [x] 4.2 Rename the `frf_type` parameter of the public `LSFD`, `LSFD_proportional` and `LSFD_old` functions to `frf_form` in the same position, with a keyword-only deprecated `frf_type` (design D4). Verify: tests that the old keyword warns and gives the same result, and that positional calls do not warn
+- [x] 4.3 Update `docs/source/tutorial.rst` to `frf_form=` and add the missing changelog entries (0.28 to 0.31), including the `frf_type` → `frf_form` renames. Verify: `grep -rn frf_type docs/source` finds only changelog lines; the docs build
 - [ ] 4.4 Set version 0.31.0. Open the PR linking the hub PR. Verify: CI green; `python ../../sdypy/tools/check_nomenclature.py --path . | grep frf_type` lists only the `Model.__init__` and `LSFD*` deprecated-alias parameters
 
 ## 5. pyEMA (ladisk/pyEMA)
 
-- [ ] 5.1 Update `docs/source/tutorial.rst` to `frf_form=`. Verify: `grep -rn frf_type docs` is empty
-- [ ] 5.2 Align pyEMA's version with sdypy-EMA: set `__version__` to 0.31.0 and the dependency to `sdypy-EMA>=0.31`. Verify: `python -c "import pyEMA; print(pyEMA.__version__)"` prints 0.31.0
+- [x] 5.1 Update `docs/source/tutorial.rst` to `frf_form=`. Verify: `grep -rn frf_type docs` is empty
+- [x] 5.2 Align pyEMA's version with sdypy-EMA: set `__version__` to 0.31.0 and the dependency to `sdypy-EMA>=0.31`. Verify: `python -c "import pyEMA; print(pyEMA.__version__)"` prints 0.31.0
 - [ ] 5.3 Open the PR linking the hub PR, after sdypy-EMA 0.31.0 is on PyPI. Verify: `pytest` passes
 
 ## 6. Close out
