@@ -31,7 +31,7 @@
 - [x] 4.1 Change `Model.add_frf()` from `get_FRF(form='receptance')` to `get_FRF('default', 'receptance')`, and add a test for `add_frf` with a small pyFRF object (none exists today). Verify: the test passes with pyFRF 1.4.0 and with 1.5.0 under `-W error::DeprecationWarning`
 - [x] 4.2 Rename the `frf_type` parameter of the public `LSFD`, `LSFD_proportional` and `LSFD_old` functions to `frf_form` in the same position, with a keyword-only deprecated `frf_type` (design D4). Verify: tests that the old keyword warns and gives the same result, and that positional calls do not warn
 - [x] 4.3 Update `docs/source/tutorial.rst` to `frf_form=` and add the missing changelog entries (0.28 to 0.31), including the `frf_type` → `frf_form` renames. Verify: `grep -rn frf_type docs/source` finds only changelog lines; the docs build
-- [ ] 4.4 Set version 0.31.0. Open the PR linking the hub PR. Verify: CI green; `python ../../sdypy/tools/check_nomenclature.py --path . | grep frf_type` lists only the `Model.__init__` and `LSFD*` deprecated-alias parameters
+- [x] 4.4 Set version 0.31.0. Open the PR linking the hub PR. Verify: CI green; `python ../../sdypy/tools/check_nomenclature.py --path . | grep frf_type` lists only the `Model.__init__` and `LSFD*` deprecated-alias parameters
 
 ## 5. pyEMA (ladisk/pyEMA)
 
