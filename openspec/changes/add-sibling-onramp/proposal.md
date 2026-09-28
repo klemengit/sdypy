@@ -31,7 +31,8 @@ reported by the checker the second requirement specifies.
   comparing marker-delimited blocks as plain text (the checkers use the standard
   library only, which has no YAML parser).
 - **Supported Python versions follow SPEC 0** (new requirement): a Python minor
-  version is supported for 3 years after its release. The concrete set has one
+  version is supported for 3 years after its release, and a new one once the
+  current NumPy and SciPy both publish wheels for it. The concrete set has one
   home, the checker; today it is 3.12, 3.13, 3.14. *Canonical test workflow* and
   *Metadata consistency* now refer to that set instead of naming 3.10–3.12.
   **BREAKING** for the template: every sibling currently declaring

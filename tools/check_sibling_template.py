@@ -21,11 +21,12 @@ from pathlib import Path
 
 # The supported Python set follows Scientific Python's SPEC 0
 # (https://scientific-python.org/specs/spec-0000/): every stable minor version
-# released less than three years ago. This is the set's one declaration (every
-# other requirement refers to it); the hub maintainer keeps it current at each
-# SPEC 0 quarterly drop or new CPython minor release - it is hand-maintained on
-# purpose, not derived from today's date, so the checker's verdict does not
-# change with the calendar (design.md Decision 4).
+# released less than three years ago for which the current NumPy and SciPy
+# publish wheels. This is the set's one declaration (every other requirement
+# refers to it); the hub maintainer keeps it current at each SPEC 0 quarterly
+# drop and once NumPy and SciPy ship wheels for a new CPython minor - it is
+# hand-maintained on purpose, not derived from today's date, so the checker's
+# verdict does not change with the calendar (design.md Decision 4).
 SUPPORTED_PYTHON = {"3.12", "3.13", "3.14"}
 PYTHON_FLOOR = min(SUPPORTED_PYTHON, key=lambda v: tuple(int(p) for p in v.split(".")))
 

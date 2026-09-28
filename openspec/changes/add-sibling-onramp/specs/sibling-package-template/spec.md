@@ -46,11 +46,11 @@ Every first-level sdypy namespace package other than the two backend shims (`sdy
 - **THEN** no violation is reported for it
 
 ### Requirement: Supported Python versions follow SPEC 0
-The Python minor versions a first-level sdypy namespace package supports SHALL follow Scientific Python's SPEC 0: from the oldest minor version released less than three years ago through the newest stable CPython release. The concrete set SHALL be declared in exactly one place, the sibling template checker; every other requirement refers to it as *the supported set*. At the time of this change the supported set is 3.12, 3.13 and 3.14.
+The Python minor versions a first-level sdypy namespace package supports SHALL follow Scientific Python's SPEC 0: from the oldest minor version released less than three years ago through the newest stable CPython release for which the current NumPy and SciPy releases both publish wheels. The concrete set SHALL be declared in exactly one place, the sibling template checker; every other requirement refers to it as *the supported set*. At the time of this change the supported set is 3.12, 3.13 and 3.14.
 
 #### Scenario: The declared set matches SPEC 0
-- **WHEN** the supported set declared in the checker is compared with the SPEC 0 drop schedule and the CPython release list
-- **THEN** it contains every stable minor version released less than three years ago and no older one
+- **WHEN** the supported set declared in the checker is compared with the SPEC 0 drop schedule, the CPython release list and the wheels published by the current NumPy and SciPy releases
+- **THEN** it contains every stable minor version released less than three years ago for which both publish wheels, and no older one
 
 #### Scenario: The set has a single declaration
 - **WHEN** the hub's tools, tests and specs are searched for the supported Python versions of a sibling

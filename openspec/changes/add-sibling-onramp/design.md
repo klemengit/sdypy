@@ -58,7 +58,10 @@ flag declared by each sibling — a sibling could then exempt itself.
 `CI_MATRIX` (3.10–3.12) with 3.12, 3.13, 3.14. The floor for `requires-python`
 is derived from it (`min`). Keeping it current is a named human task: the hub
 maintainer updates the set when SPEC 0's quarterly drop schedule removes a
-version or CPython releases a new minor. *Alternative:* compute the set from
+version, or when the current NumPy and SciPy both publish wheels for a new
+CPython minor. *Rejected:* requiring a new minor on its release day — sibling CI
+would have to pass on a Python its dependencies do not yet build for.
+*Alternative:* compute the set from
 today's date and a release table — a checker whose verdict changes with the
 calendar is not deterministic.
 
@@ -90,6 +93,10 @@ other obligation copied unchanged.
   current NumPy and SciPy already require ≥ 3.12, so those legs test stale
   dependencies. EMA's maintainers agreed; the other siblings' maintainers see
   it in their on-ramp PRs.
+- **The set is out of date within days.** SPEC 0 drops 3.12 on 2026-10-02
+  (released 2023-10-02). Kept at 3.12–3.14 on purpose: the hub maintainer
+  updates it at the drop, the `manual` check this requirement names — so
+  siblings on-ramped before then bump their floor twice.
 - **Static alias detection can be fooled** — for example a function that warns
   `DeprecationWarning` at the top for an unrelated reason exempts all its
   parameters. The failure is a missed report, never a false one, and the
