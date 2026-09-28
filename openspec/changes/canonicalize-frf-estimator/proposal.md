@@ -54,8 +54,8 @@ each package repository gets one linked pull request.
   rename their `frf_type` parameter to `frf_form`, with a deprecated alias.
   The tutorial uses `frf_form=`. The changelog records the `frf_type` →
   `frf_form` rename. Release 0.31.0.
-- **pyEMA**: the tutorial uses `frf_form=`. No code change: pyEMA re-exports
-  sdypy-EMA.
+- **pyEMA**: the tutorial uses `frf_form=`. Its version follows sdypy-EMA
+  (0.31.0). No code change: pyEMA re-exports sdypy-EMA.
 
 ## Capabilities
 
@@ -86,5 +86,5 @@ None.
 - `pyEMA`: `docs/source/tutorial.rst`, `pyEMA/__init__.py`, `pyproject.toml`.
 - No behaviour changes. User code that passes the old keywords keeps working
   and gets a `DeprecationWarning`.
-- PR #6 is superseded. It can be closed, or merged first and then rewritten
-  by this change.
+- PR #6 is superseded. Its author decides whether to close it or merge it
+  first; this change adapts either way.

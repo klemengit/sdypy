@@ -36,10 +36,11 @@
 ## 5. pyEMA (ladisk/pyEMA)
 
 - [ ] 5.1 Update `docs/source/tutorial.rst` to `frf_form=`. Verify: `grep -rn frf_type docs` is empty
-- [ ] 5.2 Open the PR linking the hub PR. Verify: `pytest` passes
+- [ ] 5.2 Align pyEMA's version with sdypy-EMA: set `__version__` to 0.31.0 and the dependency to `sdypy-EMA>=0.31`. Verify: `python -c "import pyEMA; print(pyEMA.__version__)"` prints 0.31.0
+- [ ] 5.3 Open the PR linking the hub PR, after sdypy-EMA 0.31.0 is on PyPI. Verify: `pytest` passes
 
 ## 6. Close out
 
 - [ ] 6.1 Cross-package check: in a fresh `uv venv` with all merged branches installed, run the hub `pytest -m "not pypi_artifacts" -W error::DeprecationWarning`. Verify: green, or every failure traced to a third-party warning
-- [ ] 6.2 Close or rebase PR #6 as the team decides (design D7)
+- [ ] 6.2 Close or rebase PR #6 as its author decides (design D7)
 - [ ] 6.3 After the last package PR merges, run `openspec archive canonicalize-frf-estimator` as the final hub commit, carrying the REQUIREMENTS.md update. Verify: `openspec validate --all --strict` passes

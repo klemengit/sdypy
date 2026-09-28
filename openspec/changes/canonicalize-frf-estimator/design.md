@@ -103,8 +103,9 @@ request is merged, and the archive commit updates REQUIREMENTS.md.
 
 **D7: Supersede PR #6.** PR #6 records the estimator sense of `frf_type`
 with no canonical name. This change writes that note with `frf_estimator` in
-it. Recommendation: close #6 with a link here. If the team merges #6 first,
-this change rewrites its paragraph.
+it. The hub pull request states that it supersedes #6 and asks its author
+whether to close #6 or merge it first. If #6 merges first, this change
+rewrites its paragraph.
 
 ## Risks / Trade-offs
 
@@ -127,5 +128,6 @@ this change rewrites its paragraph.
 - Should SEP 2 bind third-level backends that no first-level package
   re-exports (for example pyExSi functions not re-exported by
   `sdypy-excitation`)? This change says no.
-- pyEMA's own `__version__` is 0.27.0 while it depends on sdypy-EMA 0.30.
-  Is that intended, or should pyEMA follow the sdypy-EMA version?
+
+Resolved 2026-09-28 by the project lead: `'ODS'` stays an estimator value
+(D2); pyEMA's version follows sdypy-EMA (0.31.0, task 5.2).
